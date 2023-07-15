@@ -4,7 +4,7 @@
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="use_sim_time" value="true"/>
         <arg name="debug" value="false"/>
-        <arg name="gui" value="false"/>
+        <arg name="gui" value="true"/>
         <arg name="world_name" value="$(find rrt_exploration_tutorials)/launch/includes/worlds/house.world"/>
     </include>
 
@@ -53,26 +53,6 @@
         <param name="minimumScore" value="0.005"/>
     </node>
 
-    <arg name="cmd_vel_topic" default="/cmd_vel"/>
-<!--    <arg name="odom_topic" default="odom"/>-->
-<!--    <arg name="move_forward_only" default="false"/>-->
-
-<!--    &lt;!&ndash; move_base &ndash;&gt;-->
-<!--    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">-->
-<!--        <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"/>-->
-<!--        <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load"-->
-<!--                  ns="global_costmap"/>-->
-<!--        <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load"-->
-<!--                  ns="local_costmap"/>-->
-<!--        <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load"/>-->
-<!--        <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load"/>-->
-<!--        <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load"/>-->
-<!--        <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load"/>-->
-<!--        <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>-->
-<!--        <remap from="odom" to="$(arg odom_topic)"/>-->
-<!--        <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)"/>-->
-<!--    </node>-->
-
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
         <param name="footprint_padding" value="0.01"/>
         <param name="controller_frequency" value="5.0"/>
@@ -81,7 +61,7 @@
         <param name="oscillation_distance" value="0.5"/>
         <param name="planner_patience" value="1"/>
         <param name="controller_patience" value="1"/>
-<!--        <remap from="cmd_vel" to="mobile_base/commands/velocity"/>-->
+        <!--        <remap from="cmd_vel" to="mobile_base/commands/velocity"/>-->
         <param name="recovery_behavior_enabled" value="false"/>
         <rosparam file="$(find rrt_exploration_tutorials)/param/costmap_common_params.yaml" command="load"
                   ns="global_costmap"/>
@@ -105,20 +85,18 @@
     <arg name="Geta" value="15.0"/>
     <param name="namespace_init_count" value="1"/>
 
-    <group ns="global_detector">
+    <node pkg="rrt_exploration" type="global_rrt_detector" name="global_detector" >
         <param name="eta" value="$(arg Geta)"/>
         <param name="map_topic" value="/map"/>
-    </group>
+    </node>
 
-
-    <group ns="local_detector">
+    <node pkg="rrt_exploration" type="local_rrt_detector" name="local_detector" >
         <param name="eta" value="$(arg eta)"/>
         <param name="map_topic" value="/map"/>
         <param name="robot_frame" value="/base_footprint"/>
-    </group>
+    </node>
 
-
-    <group ns="filter">
+    <node pkg="rrt_exploration" type="filter.py" name="filter">
         <param name="map_topic" value="/map"/>
         <param name="info_radius" value="1"/>
         <param name="costmap_clearing_threshold" value="70"/>
@@ -126,9 +104,9 @@
         <param name="namespace" value=""/>
         <param name="n_robots" value="1"/>
         <param name="rate" value="100"/>
-    </group>
+    </node>
 
-    <group ns="assigner">
+    <node pkg="rrt_exploration" type="assigner.py" name="assigner">
         <param name="map_topic" value="/map"/>
         <param name="global_frame" value="map"/>
         <param name="info_radius" value="1"/>
@@ -140,11 +118,8 @@
         <param name="namespace" value=""/>
         <param name="delay_after_assignement" value="0.5"/>
         <param name="rate" value="100"/>
-    </group>
+    </node>
 
-    <!--    <include file="$(find rrt_exploration_tutorials)/launch/includes/move_baseSafe.launch">-->
-    <!--        <arg name="namespace" value=""/>-->
-    <!--    </include>-->
 
     <node pkg="rviz" type="rviz" name="rviz"
           args="-d $(find rrt_exploration_tutorials)/launch/includes/rviz_config/simple.rviz">
