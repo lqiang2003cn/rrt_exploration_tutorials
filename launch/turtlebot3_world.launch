@@ -1,0 +1,81 @@
+<launch>
+    <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <!--    <arg name="world_name" value="$(find ros_autonomous_slam)/worlds/turtlebot3_house.world"/>-->
+        <arg name="world_name" value="$(find rrt_exploration_tutorials)/launch/includes/worlds/house.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="false"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+
+    <param name="robot_description"
+           command="$(find xacro)/xacro $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro"/>
+
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"
+          args="-urdf -model turtlebot3_$(arg model) -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description"/>
+
+    <arg name="move_forward_only" default="False"/>
+    <arg name="explorer" default="RRT"/>
+
+    <!-- SLAM Node -->
+    <include file="$(find ros_autonomous_slam)/launch/turtlebot3_slam.launch">
+    </include>
+
+    <!--  &lt;!&ndash; move_base &ndash;&gt;-->
+    <include file="$(find turtlebot3_navigation)/launch/move_base.launch">
+        <arg name="model" value="$(arg model)"/>
+        <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+    </include>
+
+    <arg name="eta" value="1.0"/>
+    <arg name="Geta" value="15.0"/>
+    <param name="namespace_init_count" value="1"/>
+
+    <group ns="global_detector">
+        <param name="eta" value="$(arg Geta)"/>
+        <param name="map_topic" value="/map"/>
+    </group>
+
+
+    <group ns="local_detector">
+        <param name="eta" value="$(arg eta)"/>
+        <param name="map_topic" value="/map"/>
+        <param name="robot_frame" value="/base_footprint"/>
+    </group>
+
+
+    <group ns="filter">
+        <param name="map_topic" value="/map"/>
+        <param name="info_radius" value="1"/>
+        <param name="costmap_clearing_threshold" value="70"/>
+        <param name="goals_topic" value="/detected_points"/>
+        <param name="namespace" value=""/>
+        <param name="n_robots" value="1"/>
+        <param name="rate" value="100"/>
+    </group>
+
+    <group ns="assigner">
+        <param name="map_topic" value="/map"/>
+        <param name="global_frame" value="/map"/>
+        <param name="info_radius" value="1"/>
+        <param name="info_multiplier" value="3.0"/>
+        <param name="hysteresis_radius" value="3.0"/>
+        <param name="hysteresis_gain" value="2.0"/>
+        <param name="frontiers_topic" value="/filtered_points"/>
+        <param name="n_robots" value="1"/>
+        <param name="namespace" value=""/>
+        <param name="delay_after_assignement" value="0.5"/>
+        <param name="rate" value="100"/>
+    </group>
+
+    <node pkg="rviz" type="rviz" name="rviz"
+          args="-d $(find rrt_exploration_tutorials)/launch/includes/rviz_config/simple.rviz">
+    </node>
+
+</launch>
