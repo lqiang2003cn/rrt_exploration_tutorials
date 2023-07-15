@@ -14,13 +14,141 @@
         <arg name="init_pose" value="-x 0.0 -y 0.0 -z 0.0"/>
     </include>
 
-<!--    <include file="$(find rrt_exploration_tutorials)/launch/includes/move_baseSafe.launch">-->
-<!--        <arg name="namespace" value=""/>-->
-<!--    </include>-->
+    <param name="use_sim_time" value="true"/>
 
-<!--    <node pkg="rviz" type="rviz" name="rviz"-->
-<!--          args="-d $(find rrt_exploration_tutorials)/launch/includes/rviz_config/simple.rviz">-->
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+        <!--        <remap from="scan" to="base_scan"/>-->
+        <param name="map_frame" value="map"/>
+        <param name="odom_frame" value="odom"/>
+        <param name="base_frame" value="base_footprint"/>
+        <param name="map_update_interval" value="2.0"/>
+        <param name="maxUrange" value="50.0"/>
+        <param name="maxRange" value="50.0"/>
+        <param name="sigma" value="0.05"/>
+        <param name="kernelSize" value="1"/>
+        <param name="lstep" value="0.05"/>
+        <param name="astep" value="0.05"/>
+        <param name="iterations" value="5"/>
+        <param name="lsigma" value="0.075"/>
+        <param name="ogain" value="3.0"/>
+        <param name="lskip" value="0"/>
+        <param name="srr" value="0.01"/>
+        <param name="srt" value="0.02"/>
+        <param name="str" value="0.01"/>
+        <param name="stt" value="0.02"/>
+        <param name="linearUpdate" value="0.01"/>
+        <param name="angularUpdate" value="0.01"/>
+        <param name="temporalUpdate" value="0.1"/>
+        <param name="resampleThreshold" value="0.5"/>
+        <param name="particles" value="30"/>
+        <param name="xmin" value="-5.0"/>
+        <param name="ymin" value="-5.0"/>
+        <param name="xmax" value="5.0"/>
+        <param name="ymax" value="5.0"/>
+        <param name="delta" value="0.1"/>
+        <param name="llsamplerange" value="0.01"/>
+        <param name="llsamplestep" value="0.01"/>
+        <param name="lasamplerange" value="0.005"/>
+        <param name="lasamplestep" value="0.005"/>
+        <param name="minimumScore" value="0.005"/>
+    </node>
+
+    <arg name="cmd_vel_topic" default="/cmd_vel"/>
+<!--    <arg name="odom_topic" default="odom"/>-->
+<!--    <arg name="move_forward_only" default="false"/>-->
+
+<!--    &lt;!&ndash; move_base &ndash;&gt;-->
+<!--    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">-->
+<!--        <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"/>-->
+<!--        <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load"-->
+<!--                  ns="global_costmap"/>-->
+<!--        <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load"-->
+<!--                  ns="local_costmap"/>-->
+<!--        <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load"/>-->
+<!--        <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load"/>-->
+<!--        <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load"/>-->
+<!--        <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load"/>-->
+<!--        <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>-->
+<!--        <remap from="odom" to="$(arg odom_topic)"/>-->
+<!--        <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)"/>-->
 <!--    </node>-->
+
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <param name="footprint_padding" value="0.01"/>
+        <param name="controller_frequency" value="5.0"/>
+        <param name="controller_patience" value="3.0"/>
+        <param name="oscillation_timeout" value="30.0"/>
+        <param name="oscillation_distance" value="0.5"/>
+        <param name="planner_patience" value="1"/>
+        <param name="controller_patience" value="1"/>
+<!--        <remap from="cmd_vel" to="mobile_base/commands/velocity"/>-->
+        <param name="recovery_behavior_enabled" value="false"/>
+        <rosparam file="$(find rrt_exploration_tutorials)/param/costmap_common_params.yaml" command="load"
+                  ns="global_costmap"/>
+        <rosparam file="$(find rrt_exploration_tutorials)/param/costmap_common_params.yaml" command="load"
+                  ns="local_costmap"/>
+        <rosparam file="$(find rrt_exploration_tutorials)/param/local_costmap_params.yaml" command="load"/>
+        <rosparam file="$(find rrt_exploration_tutorials)/param/global_costmap_params.yaml" command="load"/>
+        <rosparam file="$(find rrt_exploration_tutorials)/param/base_local_planner_params.yaml" command="load"/>
+        <param name="global_costmap/global_frame" value="map"/>
+        <param name="global_costmap/robot_base_frame" value="base_footprint"/>
+        <param name="global_costmap/laser_scan_sensor/sensor_frame" value="base_laser_link"/>
+        <param name="global_costmap/laser_scan_sensor/topic" value="scan"/>
+        <param name="local_costmap/global_frame" value="odom"/>
+        <param name="local_costmap/robot_base_frame" value="base_footprint"/>
+        <param name="local_costmap/laser_scan_sensor/sensor_frame" value="base_laser_link"/>
+        <param name="local_costmap/laser_scan_sensor/topic" value="scan"/>
+        <param name="local_costmap/obstacle_layer/laser_scan_sensor/topic" value="scan"/>
+    </node>
+
+    <arg name="eta" value="1.0"/>
+    <arg name="Geta" value="15.0"/>
+    <param name="namespace_init_count" value="1"/>
+
+    <group ns="global_detector">
+        <param name="eta" value="$(arg Geta)"/>
+        <param name="map_topic" value="/map"/>
+    </group>
+
+
+    <group ns="local_detector">
+        <param name="eta" value="$(arg eta)"/>
+        <param name="map_topic" value="/map"/>
+        <param name="robot_frame" value="/base_footprint"/>
+    </group>
+
+
+    <group ns="filter">
+        <param name="map_topic" value="/map"/>
+        <param name="info_radius" value="1"/>
+        <param name="costmap_clearing_threshold" value="70"/>
+        <param name="goals_topic" value="/detected_points"/>
+        <param name="namespace" value=""/>
+        <param name="n_robots" value="1"/>
+        <param name="rate" value="100"/>
+    </group>
+
+    <group ns="assigner">
+        <param name="map_topic" value="/map"/>
+        <param name="global_frame" value="map"/>
+        <param name="info_radius" value="1"/>
+        <param name="info_multiplier" value="3.0"/>
+        <param name="hysteresis_radius" value="3.0"/>
+        <param name="hysteresis_gain" value="2.0"/>
+        <param name="frontiers_topic" value="/filtered_points"/>
+        <param name="n_robots" value="1"/>
+        <param name="namespace" value=""/>
+        <param name="delay_after_assignement" value="0.5"/>
+        <param name="rate" value="100"/>
+    </group>
+
+    <!--    <include file="$(find rrt_exploration_tutorials)/launch/includes/move_baseSafe.launch">-->
+    <!--        <arg name="namespace" value=""/>-->
+    <!--    </include>-->
+
+    <node pkg="rviz" type="rviz" name="rviz"
+          args="-d $(find rrt_exploration_tutorials)/launch/includes/rviz_config/simple.rviz">
+    </node>
 
 </launch>
 
