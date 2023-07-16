@@ -4,7 +4,7 @@
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="use_sim_time" value="true"/>
         <arg name="debug" value="false"/>
-        <arg name="gui" value="true"/>
+        <arg name="gui" value="false"/>
         <arg name="world_name" value="$(find rrt_exploration_tutorials)/launch/includes/worlds/house.world"/>
     </include>
 
@@ -16,8 +16,44 @@
 
     <param name="use_sim_time" value="true"/>
 
+    <!--    <group ns="slam_gmapping">-->
+    <!--        <param name="map_frame" value="map"/>-->
+    <!--        <param name="odom_frame" value="odom"/>-->
+    <!--        <param name="base_frame" value="base_footprint"/>-->
+    <!--        <param name="map_update_interval" value="2.0"/>-->
+    <!--        <param name="maxUrange" value="50.0"/>-->
+    <!--        <param name="maxRange" value="50.0"/>-->
+    <!--        <param name="sigma" value="0.05"/>-->
+    <!--        <param name="kernelSize" value="1"/>-->
+    <!--        <param name="lstep" value="0.05"/>-->
+    <!--        <param name="astep" value="0.05"/>-->
+    <!--        <param name="iterations" value="5"/>-->
+    <!--        <param name="lsigma" value="0.075"/>-->
+    <!--        <param name="ogain" value="3.0"/>-->
+    <!--        <param name="lskip" value="0"/>-->
+    <!--        <param name="srr" value="0.01"/>-->
+    <!--        <param name="srt" value="0.02"/>-->
+    <!--        <param name="str" value="0.01"/>-->
+    <!--        <param name="stt" value="0.02"/>-->
+    <!--        <param name="linearUpdate" value="0.01"/>-->
+    <!--        <param name="angularUpdate" value="0.01"/>-->
+    <!--        <param name="temporalUpdate" value="0.1"/>-->
+    <!--        <param name="resampleThreshold" value="0.5"/>-->
+    <!--        <param name="particles" value="30"/>-->
+    <!--        <param name="xmin" value="-5.0"/>-->
+    <!--        <param name="ymin" value="-5.0"/>-->
+    <!--        <param name="xmax" value="5.0"/>-->
+    <!--        <param name="ymax" value="5.0"/>-->
+    <!--        <param name="delta" value="0.1"/>-->
+    <!--        <param name="llsamplerange" value="0.01"/>-->
+    <!--        <param name="llsamplestep" value="0.01"/>-->
+    <!--        <param name="lasamplerange" value="0.005"/>-->
+    <!--        <param name="lasamplestep" value="0.005"/>-->
+    <!--        <param name="minimumScore" value="0.005"/>-->
+    <!--    </group>-->
+
+
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
-        <!--        <remap from="scan" to="base_scan"/>-->
         <param name="map_frame" value="map"/>
         <param name="odom_frame" value="odom"/>
         <param name="base_frame" value="base_footprint"/>
@@ -61,7 +97,6 @@
         <param name="oscillation_distance" value="0.5"/>
         <param name="planner_patience" value="1"/>
         <param name="controller_patience" value="1"/>
-        <!--        <remap from="cmd_vel" to="mobile_base/commands/velocity"/>-->
         <param name="recovery_behavior_enabled" value="false"/>
         <rosparam file="$(find rrt_exploration_tutorials)/param/costmap_common_params.yaml" command="load"
                   ns="global_costmap"/>
@@ -85,18 +120,20 @@
     <arg name="Geta" value="15.0"/>
     <param name="namespace_init_count" value="1"/>
 
-    <node pkg="rrt_exploration" type="global_rrt_detector" name="global_detector" >
+    <group ns="global_detector">
         <param name="eta" value="$(arg Geta)"/>
         <param name="map_topic" value="/map"/>
-    </node>
+    </group>
 
-    <node pkg="rrt_exploration" type="local_rrt_detector" name="local_detector" >
+
+    <group ns="local_detector">
         <param name="eta" value="$(arg eta)"/>
         <param name="map_topic" value="/map"/>
         <param name="robot_frame" value="/base_footprint"/>
-    </node>
+    </group>
 
-    <node pkg="rrt_exploration" type="filter.py" name="filter">
+
+    <group ns="filter">
         <param name="map_topic" value="/map"/>
         <param name="info_radius" value="1"/>
         <param name="costmap_clearing_threshold" value="70"/>
@@ -104,11 +141,11 @@
         <param name="namespace" value=""/>
         <param name="n_robots" value="1"/>
         <param name="rate" value="100"/>
-    </node>
+    </group>
 
-    <node pkg="rrt_exploration" type="assigner.py" name="assigner">
+    <group ns="assigner">
         <param name="map_topic" value="/map"/>
-        <param name="global_frame" value="map"/>
+        <param name="global_frame" value="/map"/>
         <param name="info_radius" value="1"/>
         <param name="info_multiplier" value="3.0"/>
         <param name="hysteresis_radius" value="3.0"/>
@@ -118,7 +155,43 @@
         <param name="namespace" value=""/>
         <param name="delay_after_assignement" value="0.5"/>
         <param name="rate" value="100"/>
-    </node>
+    </group>
+
+
+<!--    <node pkg="rrt_exploration" type="global_rrt_detector" name="global_detector">-->
+<!--        <param name="eta" value="$(arg Geta)"/>-->
+<!--        <param name="map_topic" value="/map"/>-->
+<!--    </node>-->
+
+<!--    <node pkg="rrt_exploration" type="local_rrt_detector" name="local_detector">-->
+<!--        <param name="eta" value="$(arg eta)"/>-->
+<!--        <param name="map_topic" value="/map"/>-->
+<!--        <param name="robot_frame" value="/base_footprint"/>-->
+<!--    </node>-->
+
+<!--    <node pkg="rrt_exploration" type="filter.py" name="filter">-->
+<!--        <param name="map_topic" value="/map"/>-->
+<!--        <param name="info_radius" value="1"/>-->
+<!--        <param name="costmap_clearing_threshold" value="70"/>-->
+<!--        <param name="goals_topic" value="/detected_points"/>-->
+<!--        <param name="namespace" value=""/>-->
+<!--        <param name="n_robots" value="1"/>-->
+<!--        <param name="rate" value="100"/>-->
+<!--    </node>-->
+
+<!--    <node pkg="rrt_exploration" type="assigner.py" name="assigner">-->
+<!--        <param name="map_topic" value="/map"/>-->
+<!--        <param name="global_frame" value="map"/>-->
+<!--        <param name="info_radius" value="1"/>-->
+<!--        <param name="info_multiplier" value="3.0"/>-->
+<!--        <param name="hysteresis_radius" value="3.0"/>-->
+<!--        <param name="hysteresis_gain" value="2.0"/>-->
+<!--        <param name="frontiers_topic" value="/filtered_points"/>-->
+<!--        <param name="n_robots" value="1"/>-->
+<!--        <param name="namespace" value=""/>-->
+<!--        <param name="delay_after_assignement" value="0.5"/>-->
+<!--        <param name="rate" value="100"/>-->
+<!--    </node>-->
 
 
     <node pkg="rviz" type="rviz" name="rviz"
